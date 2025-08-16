@@ -1,0 +1,46 @@
+name: BSD
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  freebsd:
+    name: FreeBSD
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Test in FreeBSD
+      id: test
+      uses: vmactions/freebsd-vm@v1
+      with:
+        release: "14.3" 
+        usesh: true
+        prepare: |
+          # pkg-static update
+          # pkg-static upgrade -y pkg
+          pkg install -y ghc hs-cabal-install
+
+        run: |
+          pwd
+          ls -lah
+          whoami
+          env
+          freebsd-version
+          sysctl hw.model
+          sysctl hw.ncpu
+          sysctl hw.physmem
+          sysctl hw.usermem
+
+          ghc --version
+          cabal --version
+
+          cabal update
+          cabal build all --enable-tests --dry-run
+          cabal build all --enable-tests
+          cabal test all --enable-tests --test-show-details=direct
